@@ -16,7 +16,8 @@ namespace Snake
     {
         private List<Circle> PlayerSnake = new List<Circle>();
         private Circle Target = new Circle();
-        private string Directory = System.IO.Directory.GetCurrentDirectory();
+        private static string Directory = System.IO.Directory.GetCurrentDirectory();
+        private static string File = $"{Directory}/Highscores.txt";
         private const int MaximumSpeed = 18;
         private const int MaximumHighscores = 5;
         private static SpeechSynthesizer Synth = new SpeechSynthesizer();
@@ -74,10 +75,12 @@ namespace Snake
             string[] Scores = ReadScores();
             string HighScoreText = "";
             for (int i = 0; i < Scores.Length; i++)
+            {
                 if (i < MaximumHighscores)
-                    HighScoreText += $"{i+1}. {Scores[i]}\n";
+                    HighScoreText += $"{i + 1}. {Scores[i]}\n";
                 else
                     break;
+            }
             lblHighScore.Text = HighScoreText;
 
             GenerateTarget();
@@ -300,7 +303,7 @@ namespace Snake
         {
             try
             {
-                return System.IO.File.ReadAllLines(Directory);
+                return System.IO.File.ReadAllLines(File);
             } catch(IOException)
             {
                 MessageBox.Show("Couldn't read from file");
@@ -313,7 +316,7 @@ namespace Snake
         {
             try
             {
-                System.IO.File.WriteAllLines(Directory, Scores);
+                System.IO.File.WriteAllLines(File, Scores);
             }
             catch (IOException)
             {
