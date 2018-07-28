@@ -303,6 +303,10 @@ namespace Snake
         {
             try
             {
+                // In case the file does not exist yet, create file
+                if (!System.IO.File.Exists(File))
+                    System.IO.File.WriteAllText(File, "");
+
                 return System.IO.File.ReadAllLines(File);
             } catch(IOException)
             {
