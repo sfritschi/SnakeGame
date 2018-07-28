@@ -198,39 +198,37 @@ namespace Snake
             Settings.GameOver = true;
             // Write high score to File
             string[] Scores = ReadScores();
-            int ParsedScore = 0;
-            bool IsNumber = true;
-            try
-            {
-                ParsedScore = int.Parse(Scores[0]);
-            }
-            catch (Exception)
-            {
-                IsNumber = false;
-            };
+
             // File is Empty
             if (Scores.Length == 0)
             {
-                string[] CurrentScore = { Settings.Score.ToString() }; 
-                WriteScores(CurrentScore);
+                // Only update Score if current score is greater than 0
+                if (Settings.Score > 0)
+                {
+                    string[] CurrentScore = { Settings.Score.ToString() };
+                    WriteScores(CurrentScore);
+                }
               
             }
-            else if (IsNumber)
+            else if (IsHighScore(Scores) && IsUnique(Scores) && Settings.Score > 0)
             {
-                if (ParsedScore < Settings.Score)
-                {
-                    string[] HighScore = { Settings.Score.ToString() };
-                    var NewScores = new string[Scores.Length + HighScore.Length];
+                string[] HighScore = { Settings.Score.ToString() };
+                var NewScores = new string[Scores.Length + HighScore.Length];
 
-                    HighScore.CopyTo(NewScores, 0);
-                    Scores.CopyTo(NewScores, HighScore.Length);
+                HighScore.CopyTo(NewScores, 0);
+                Scores.CopyTo(NewScores, HighScore.Length);
 
-                    WriteScores(NewScores);
-                } else
-                {
-                    // Mock player
-                    Synth.SpeakAsync(TTSMessages[rnd.Next(0, TTSMessages.Count)]);
-                }
+                // Sort scores
+                string[] SortedScores = Sort(NewScores);
+                if (SortedScores.Length > MaximumHighscores)
+                    // Pop off the last element if Scores contains more than 5 elemments
+                    SortedScores = SortedScores.Take(SortedScores.Length-1).ToArray();
+                 WriteScores(SortedScores);
+            }
+            else
+            {
+                // Mock player
+                Synth.SpeakAsync(TTSMessages[rnd.Next(0, TTSMessages.Count)]);
             }
         }
 
@@ -327,6 +325,67 @@ namespace Snake
                 MessageBox.Show("Couldn't write to file");
             }
         }
+
+        #region Utils
+        // Check if current score is amidst top 5 scores
+        private bool IsHighScore(string[] Scores)
+        {
+            if (Scores.Length < MaximumHighscores)
+                return true;
+            try
+            {
+                for (int i = 0; i < Scores.Length; i++)
+                {
+                    if (i < MaximumHighscores)
+                    {
+                        int ParsedScore = int.Parse(Scores[i]);
+                        if (Settings.Score > ParsedScore)
+                            return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // Checks if Score is unique
+        private bool IsUnique(string[] Scores)
+        {
+            return Array.IndexOf(Scores, Settings.Score.ToString()) <= -1;
+        }
+
+        // Sort the array of the individual scores
+        private string[] Sort(string[] Scores)
+        {
+            try
+            {
+                for (int i = 0; i < Scores.Length - 1; i++)
+                {
+                    for (int j = i + 1; j < Scores.Length; j++)
+                    {
+                        int CurrentScore = int.Parse(Scores[i]);
+                        int NextScore = int.Parse(Scores[j]);
+                        if (CurrentScore < NextScore)
+                        {
+                            string tmp = Scores[i];
+                            Scores[i] = Scores[j];
+                            Scores[j] = tmp;
+                        }
+                    }
+                }
+            }
+            catch (Exception) { /* Do nothing */ }
+
+            return Scores;
+        }
+        #endregion
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
